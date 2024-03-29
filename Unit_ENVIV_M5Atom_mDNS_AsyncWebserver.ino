@@ -17,9 +17,13 @@
   - [Adafruit_Sensor](https://github.com/adafruit/Adafruit_Sensor)
   - [SensirionI2CSht4x](https://github.com/Tinyu-Zhao/arduino-i2c-sht4x)
 */
-
+/*
 // http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc214/doc21403.html
 // http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc215/doc21501.html
+  [ESPAsyncWebServer] https://github.com/me-no-dev/ESPAsyncWebServer?tab=readme-ov-file
+  [ASyncTCP]  https://github.com/me-no-dev/AsyncTCP
+
+*/
 
 #include "M5Atom.h"
 //#include <M5Stack.h>
