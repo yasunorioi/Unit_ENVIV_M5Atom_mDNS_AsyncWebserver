@@ -1,8 +1,9 @@
 **M5Atom+ENV.IV sensor
 mDNS+AsyncWebserver
-1.change wifi_ssid,pass,mdns_name
-2.upload m5atom
-3.browser access m5atom
+
+-change wifi_ssid,pass,mdns_name
+-upload m5atom
+-browser access m5atom
 http://m5atom-0001.local/
 
 **URL
