@@ -188,6 +188,7 @@ void setup() {
 /*    M5.Power.begin();  // Init power  初始化电源模块
     M5.Lcd.setTextSize(2);
 */  
+    M5.dis.drawpix(0, 0x000000);
     Wire.begin();  // SDA = 16, SCL = 34
     Serial.begin(115200);
     while (!Serial) {
@@ -221,6 +222,7 @@ void setup() {
         Serial.print("Error trying to execute serialNumber(): ");
         errorToString(error, errorMessage, 256);
         Serial.println(errorMessage);
+        M5.dis.drawpix(0, 0xff0000);
     } else {
         Serial.print("Serial Number: ");
         Serial.println(serialNumber);
@@ -250,6 +252,7 @@ void setup() {
     });
     // サーバーを開始する
     server.begin();
+    M5.dis.drawpix(0, 0x00ff00);
 }
 
 
