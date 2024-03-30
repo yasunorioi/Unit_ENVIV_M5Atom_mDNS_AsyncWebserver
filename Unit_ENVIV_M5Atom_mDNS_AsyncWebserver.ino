@@ -37,8 +37,8 @@
 #include <ESPAsyncWebServer.h>
 #define HTTP_PORT 80
 
-const char* wifi_ssid = "your WiFi SSID";
-const char* wifi_password = "password";
+const char* wifi_ssid = "TP-Link_Extender";
+const char* wifi_password = "chaylan22";
 const char* MDNS_NAME="M5Atom-0001";
 
 // 初始化传感器
@@ -72,11 +72,12 @@ const char* strHtml = R"rawliteral(
   </head>
   <body>
     <h1>Asynchronous Server</h1>
-    <p style='color:brown; font-weight: bold'>計測値は10秒ごとに自動更新されます！</p>
+    <p style='color:brown; font-weight: bold'>計測値は10秒ごとに自動更新されます!</p>
     <p><table>
       <tr><th>ELEMENT</th><th>VALUE</th></tr>
       <tr><td>Temperature</td><td><span id="temperature" class="value">%TEMPERATURE%</span>
       <tr><td>Humidity</td><td><span id="humidity" class="value">%HUMIDITY%</span>
+      <tr><td>Pressure</td><td><span id="pressure" class="value">%PRESSURE%</span>
       <tr><td>Current time</td><td><span id="curtime" class="value">yyyy/mm/dd<br>hh:nn:ss</span>
       </td></tr>
     </table></p>
@@ -102,7 +103,17 @@ const char* strHtml = R"rawliteral(
       xhr.open("GET", "/humidity", true);
       xhr.send(null);
     }
-      var getCurTime = function () {
+    var getPressure = function () {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("pressure").innerHTML = this.responseText;
+        }
+      };
+      xhr.open("GET", "/pressure", true);
+      xhr.send(null);
+    }
+    var getCurTime = function () {
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
@@ -114,6 +125,7 @@ const char* strHtml = R"rawliteral(
     }
     setInterval(getTemperature, 10000);
     setInterval(getHumidity, 10000);
+    setInterval(getPressure, 10000);
     setInterval(getCurTime, 500);
   </script>
 </html>)rawliteral";
@@ -146,7 +158,6 @@ String getTemperature() {
         return String(t) + " ℃";
     }
 }
- 
 String getHumidity() {
 //    float h = dht.readHumidity();
     float t,h ;
@@ -157,7 +168,20 @@ String getHumidity() {
     }
     else {
        // Serial.println(h);
-        return String(h) + " %";
+        return String(h) + " &#37;";
+    }
+}
+String getPressure() {
+    float p ;
+    p = bmp.readPressure();
+    p = p * 0.01;
+    if (isnan(p)) {
+      //  Serial.println("Failed to get humidity!");
+        return "--";
+    }
+    else {
+        //Serial.println(p);
+        return String(p) + " hPa";
     }
 }
 String getCurTime(){
@@ -172,13 +196,16 @@ String getCurTime(){
         return buf;
     }
 }
-
 String editPlaceHolder(const String& var){
     if(var == "TEMPERATURE"){
         return getTemperature();
     }
     else if(var == "HUMIDITY"){
         return getHumidity();
+    }
+    //Pressure
+    else if(var == "PRESSURE"){
+        return getPressure();
     }
     //ntp
     else if(var == "CURTIME"){
@@ -251,10 +278,13 @@ void setup() {
     server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/plain", getHumidity().c_str());
     });
-
+    //pressure
+    server.on("/pressure", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/plain", getPressure().c_str());
+    });
     //ntp
     server.on("/curtime", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getCurTime().c_str());
+        request->send_P(200, "text/plain", getCurTime().c_str());
     });
     // サーバーを開始する
     server.begin();
@@ -283,7 +313,7 @@ void loop() {
         static char pressure2[10];
         pressure = bmp.readPressure();
         pressure=pressure*0.01;
-        dtostrf(pressure,6,2,pressure2);
+        dtostrf(pressure,7,2,pressure2);
         Serial.print("Pressure:");
         Serial.println(pressure2);
         
