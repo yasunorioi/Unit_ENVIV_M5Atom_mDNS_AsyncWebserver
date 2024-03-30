@@ -140,14 +140,45 @@ const char* strHtml = R"rawliteral(
  */
 
 void wifi_connect(void){
-  Serial.print("WiFi Connenting");
- // WiFi.begin(wifi_ssid, wifi_password);
+  Serial.println("WiFi begin");
+  WiFi.begin();
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
-    delay(1000);
+    delay(500);
+    if ( 10000 < millis() ) {
+      break;
+    }
   }
   Serial.println("");
-  Serial.print("Connected : ");
+  if ( WiFi.status() != WL_CONNECTED ) {
+    WiFi.mode(WIFI_STA);
+    WiFi.beginSmartConfig();
+    Serial.println("Waiting for SmartConfig");
+    while (!WiFi.smartConfigDone()) {
+      delay(500);
+      Serial.print("#");
+      if ( 30000 < millis() ) {
+        Serial.println("");
+        Serial.println("Reset");
+        ESP.restart();
+      }
+    }
+    // Wi-fi接続
+    Serial.println("");
+    Serial.println("Waiting for WiFi");
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+      if ( 60000 < millis() ) {
+        Serial.println("");
+        Serial.println("Reset");
+        ESP.restart();
+      }
+    }
+    Serial.println("");
+    Serial.println("WiFi Connected.");
+  }
+  Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 }
 
@@ -232,12 +263,8 @@ void setup() {
     while (!Serial) {
         delay(100);
     }
-  WiFi.mode(WIFI_AP_STA);
+
   WiFi.beginSmartConfig();
-  while (!WiFi.smartConfigDone()) {
-    delay(500);
-  Serial.print(".");
-  }
   wifi_connect();
   configTime(9*3600L, 0, "ntp.nict.jp", "ntp.jst.mfeed.ad.jp");
   if(!MDNS.begin(MDNS_NAME)){
