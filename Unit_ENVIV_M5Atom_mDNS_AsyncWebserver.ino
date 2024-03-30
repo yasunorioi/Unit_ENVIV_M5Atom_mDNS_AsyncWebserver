@@ -257,6 +257,8 @@ void setup() {
 /*    M5.Power.begin();  // Init power  初始化电源模块
     M5.Lcd.setTextSize(2);
 */  
+    pinMode(0,OUTPUT);
+    digitalWrite(0,LOW);
     M5.dis.drawpix(0, 0x000000);
     Wire.begin();  // SDA = 16, SCL = 34
     Serial.begin(115200);
