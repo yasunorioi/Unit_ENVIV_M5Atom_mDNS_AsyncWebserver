@@ -37,8 +37,8 @@
 #include <ESPAsyncWebServer.h>
 #define HTTP_PORT 80
 
-const char* wifi_ssid = "TP-Link_Extender";
-const char* wifi_password = "chaylan22";
+const char* wifi_ssid = "Your WiFi SSID";
+const char* wifi_password = "password";
 const char* MDNS_NAME="M5Atom-0001";
 
 // 初始化传感器
