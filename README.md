@@ -1,7 +1,7 @@
 **M5Atom+ENV.IV sensor**
 mDNS+AsyncWebserver
 
-- change wifi_ssid,pass,mdns_name
+-If you want to change the mDNS name from m5atom-0001, rewrite line 45.
 - upload m5atom
 - browser access m5atom
 http://m5atom-0001.local/
