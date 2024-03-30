@@ -27,6 +27,12 @@
   // http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc215/doc21501.html
 */
 
+/*
+ * You can use ESPtouch
+ * https://play.google.com/store/apps/details?id=com.dparts.esptouch&hl=en_US&pli=1
+ * https://apps.apple.com/us/app/espressif-esptouch/id1071176700
+ */
+
 #include "M5Atom.h"
 //#include <M5Stack.h>
 #include <SensirionI2CSht4x.h>
@@ -37,9 +43,9 @@
 #include <ESPAsyncWebServer.h>
 #define HTTP_PORT 80
 
-const char* wifi_ssid = "Your WiFi SSID";
-const char* wifi_password = "password";
+
 const char* MDNS_NAME="M5Atom-0001";
+
 
 // 初始化传感器
 Adafruit_BMP280 bmp;
@@ -135,8 +141,7 @@ const char* strHtml = R"rawliteral(
 
 void wifi_connect(void){
   Serial.print("WiFi Connenting");
-
-  WiFi.begin(wifi_ssid, wifi_password);
+ // WiFi.begin(wifi_ssid, wifi_password);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(1000);
@@ -155,7 +160,7 @@ String getTemperature() {
     }
     else {
     //    Serial.println(t);
-        return String(t) + " ℃";
+        return String(t) + " &#8451;";
     }
 }
 String getHumidity() {
@@ -227,6 +232,12 @@ void setup() {
     while (!Serial) {
         delay(100);
     }
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.beginSmartConfig();
+  while (!WiFi.smartConfigDone()) {
+    delay(500);
+  Serial.print(".");
+  }
   wifi_connect();
   configTime(9*3600L, 0, "ntp.nict.jp", "ntp.jst.mfeed.ad.jp");
   if(!MDNS.begin(MDNS_NAME)){
