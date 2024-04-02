@@ -15,7 +15,7 @@
     Libraries:
   - [Adafruit_BMP280](https://github.com/adafruit/Adafruit_BMP280_Library)
   - [Adafruit_Sensor](https://github.com/adafruit/Adafruit_Sensor)
-  - [SensirionI2CSht4x](https://github.com/Tinyu-Zhao/arduino-i2c-sht4x)
+  - [arduino-i2c-sht4x](https://github.com/Sensirion/arduino-i2c-sht4x)
 */
 
 /*
@@ -35,24 +35,30 @@
 
 #include "M5Atom.h"
 //#include <M5Stack.h>
+/*
 #include <SensirionI2CSht4x.h>
 #include <Adafruit_BMP280.h>
 #include "Adafruit_Sensor.h"
+*/
+#include <SensirionI2CSht4x.h>
+#include <Adafruit_BMP280.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ESPAsyncWebServer.h>
 #define HTTP_PORT 80
-
+#define FASTLED_ALL_PINS_HARDWARE_SPI
 
 const char* MDNS_NAME="M5Atom-0001";
 
 
 // 初始化传感器
+/*Adafruit_BMP280 bmp;
+SensirionI2CSht4x sht4x;
+*/
+SensirionI2CSht4x sht4x;
 Adafruit_BMP280 bmp;
 
-SensirionI2CSht4x sht4x;
-float temperature, pressure,
-    humidity;  // Store the vuale of pressure and Temperature.  存储压力和温度
+float pressure,t,h;  // Store the vuale of pressure and Temperature.  存储压力和温度
 
 AsyncWebServer server(HTTP_PORT);
 
@@ -183,29 +189,40 @@ void wifi_connect(void){
 }
 
 String getTemperature() {
+    /*uint16_t error;
+    char errorMessage[256];
     float t,h;
-    sht4x.measureHighPrecision(t,h);
-    if (isnan(t)) {    
-     //   Serial.println("Failed to get temperature!");
-        return "--";
-    }
-    else {
-    //    Serial.println(t);
-        return String(t) + " &#8451;";
-    }
+    error = sht4x.measureHighPrecision(t, h);
+    if (error) {
+      errorToString(error, errorMessage, 256);
+    } else {
+      if (isnan(t)) {    
+       //   Serial.println("Failed to get temperature!");
+          return "--";
+      }
+      else {
+      //    Serial.println(t);
+          return String(t) + " &#8451;";
+      }
+    }*/
+    return String(t) + " &#8451;";
 }
 String getHumidity() {
 //    float h = dht.readHumidity();
-    float t,h ;
-    sht4x.measureHighPrecision(t,h);
-    if (isnan(h)) {
-      //  Serial.println("Failed to get humidity!");
-        return "--";
-    }
-    else {
+    /*float t,h ;
+    uint16_t error;
+    if (error) {
+      //h = sht4x.measureHighPrecision(t,h);
+      if (isnan(h)) {
+        //  Serial.println("Failed to get humidity!");
+          return "--";
+      }
+      else {
        // Serial.println(h);
-        return String(h) + " &#37;";
+          return String(h) + " &#37;";
     }
+  }*/
+  return String(h) + " &#37;";
 }
 String getPressure() {
     float p ;
@@ -249,7 +266,6 @@ String editPlaceHolder(const String& var){
     }
     return "??";
 }
-//ntp
 
 void setup() {
     // 初始化传感器
@@ -265,7 +281,6 @@ void setup() {
     while (!Serial) {
         delay(100);
     }
-
   WiFi.beginSmartConfig();
   wifi_connect();
   configTime(9*3600L, 0, "ntp.nict.jp", "ntp.jst.mfeed.ad.jp");
@@ -275,38 +290,38 @@ void setup() {
     delay(10000);
     ESP.restart();
   }
-    while (!bmp.begin(
-        0x76)) {  // Init this sensor,True if the init was successful, otherwise
-                  // false.   初始化传感器,如果初始化成功返回1
-//        M5.Lcd.println("Could not find a valid BMP280 sensor, check wiring!");
-        Serial.println(F("BMP280 fail"));
-    }
-//    M5.Lcd.clear();  // Clear the screen.  清屏
-    Serial.println(F("BMP280 test"));
-
     uint16_t error;
     char errorMessage[256];
-
     sht4x.begin(Wire);
-
     uint32_t serialNumber;
     error = sht4x.serialNumber(serialNumber);
     if (error) {
         Serial.print("Error trying to execute serialNumber(): ");
         errorToString(error, errorMessage, 256);
         Serial.println(errorMessage);
-        M5.dis.drawpix(0, 0xff0000);
     } else {
         Serial.print("Serial Number: ");
         Serial.println(serialNumber);
     }
+  unsigned status;
+  status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
+  //status = bmp.begin();
+  if (!status) {
+    Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
+                      "try a different address!"));
+    Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(),16);
+    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+    Serial.print("        ID of 0x60 represents a BME 280.\n");
+    Serial.print("        ID of 0x61 represents a BME 680.\n");
+    while (1) delay(10);
+  }
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                  Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 
-    // 设置传感器的采样率和滤波器
-    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,   // 模式：正常
-                    Adafruit_BMP280::SAMPLING_X2,   // 温度采样率：2倍
-                    Adafruit_BMP280::SAMPLING_X16,  // 压力采样率：16倍
-                    Adafruit_BMP280::FILTER_X16,    // 滤波器：16倍
-                    Adafruit_BMP280::STANDBY_MS_500);  // 等待时间：500毫秒
     
     // GETリクエストに対するハンドラーを登録して
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -333,32 +348,34 @@ void setup() {
 
 
 void loop() {
-    uint16_t error;
-    char errorMessage[256];
-
-    delay(1000);
-
-    error = sht4x.measureHighPrecision(temperature, humidity);
-    if (error) {
-        Serial.print("Error trying to execute measureHighPrecision(): ");
-        errorToString(error, errorMessage, 256);
-        Serial.println(errorMessage);
-    } else {
+  float p;
+  uint16_t error;
+  static char pressure2[10];
+  //error=sht4x.measureHighPrecision(temperature, humidity);
         Serial.print("Temperature:");
-        Serial.print(temperature);
+        Serial.print(t);
         Serial.print(",");
         Serial.print("Humidity:");
-        Serial.print(humidity);
+        Serial.print(h);
         Serial.print(",");
-        static char pressure2[10];
-        pressure = bmp.readPressure();
-        pressure=pressure*0.01;
-        dtostrf(pressure,7,2,pressure2);
+        p=bmp.readPressure();
+        p=p*0.01;
+        dtostrf(p,7,2,pressure2);
         Serial.print("Pressure:");
         Serial.println(pressure2);
         
-    }
     
+  uint16_t error_sht4x;
+  float temperature, humidity;
+  char errorMessage[256];
+  error_sht4x=sht4x.measureHighPrecision(temperature,humidity);
+  if(error_sht4x){
+    errorToString(error_sht4x,errorMessage,256);
+    Serial.println(errorMessage);
+  }else{
+    t=temperature;
+    h=humidity;
+  }
   /*  M5.Lcd.setCursor(0, 0);  // 将光标设置在(0 ,0).  Set the cursor to (0,0)
     M5.Lcd.printf("Pressure:%2.0fPa\nTemperature:%2.0f^C", pressure,
                   temperature);
@@ -367,5 +384,5 @@ void loop() {
     M5.Lcd.print(humidity);
     M5.Lcd.print("%");
     */
-    delay(100);
+    delay(2000);
 }
